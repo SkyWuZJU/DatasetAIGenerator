@@ -1,25 +1,22 @@
-# from langchain.schema import (
-#     AIMessage,
-#     HumanMessage,
-#     SystemMessage
-# )
 import prompt_templates
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import azure_openai
 from langchain.chains import LLMChain
 
 class InstructionGenerator:
-    OPENAI_API_KEY = "44a43d50221443c690df1c2fd0f9cc14"
-    OPENAI_API_BASE = "https://xiaoma-openai.openai.azure.com/"
+    # OPENAI_API_KEY = "44a43d50221443c690df1c2fd0f9cc14"
+    # OPENAI_API_BASE = "https://xiaoma-openai.openai.azure.com/"
+    OPENAI_API_KEY = '5fae23bf317545e4b2d5c1fd8a8eb070'
+    OPENAI_API_BASE = 'https://xiaoma-ai-jp.openai.azure.com/'
+
     OPENAI_API_VERSION = "2023-05-15"
     OPENAI_API_TYPE = "azure"
-    REQUEST_TIMEOUT = 60
+    REQUEST_TIMEOUT = 300
     input_variables = ["initial_prompt"]
     
     def __init__(
             self, 
             prompt_template: str, 
-            # input_variables = ['initial_prompt'],
             prefix = '',
             examples = [''],
             example_separator = '',
@@ -29,7 +26,6 @@ class InstructionGenerator:
     ):
         # Prompt相关参数
         self.prompt_template = prompt_template
-        # self.input_variables = input_variables
         ## Few Shot Prompt 相关参数
         self.prefix = prefix
         self.examples = examples
@@ -65,7 +61,15 @@ class InstructionGenerator:
                 openai_api_type = InstructionGenerator.OPENAI_API_TYPE
             )
         )
-        return llmchain.predict(initial_prompt = initial_prompt)
+        try:
+            return llmchain.predict(initial_prompt = initial_prompt)
+        except Exception as e: # 审核不通时输出当前生成的情况，并跳过
+            print('----报错啦----')
+            print(f"Caught an error: {e}")
+            print('----待升级指令----')
+            print(initial_prompt)
+            print('----升级类型----')
+            print(self.prompt_template)
     
 add_constraints = InstructionGenerator(
     prompt_template=prompt_templates.add_constraints
@@ -88,6 +92,7 @@ increase_reasoning = InstructionGenerator(
 # print(increase_reasoning.generate("1+1=?")) #测试用
 
 enhance_diversity = InstructionGenerator(
-    prompt_template=prompt_templates.enhance_diversity
+    prompt_template=prompt_templates.enhance_diversity,
+    TEMPERATURE = 0.5
 )
 # print(enhance_diversity.generate("1+1=?")) #测试用
